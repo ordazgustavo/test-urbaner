@@ -8,8 +8,6 @@ const submenu = props => {
   if (props.show) {
     classes.push('is-active')
   }
-
-  console.log(classes.join(' '));
   return (
     <div className={classes.join(' ')}>
       <div className="navbar-start">
@@ -17,7 +15,7 @@ const submenu = props => {
       </div>
 
       <div className="navbar-end">
-        <NavigationItems />
+        <NavigationItems isAuthenticated={props.isAuth} />
       </div>
     </div>
   )

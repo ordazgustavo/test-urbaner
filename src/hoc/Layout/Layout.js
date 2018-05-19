@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 
 import Aux from '../Aux/Aux'
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar'
@@ -23,14 +24,22 @@ class Layout extends Component {
     return (
       <Aux>
         <Toolbar submenuToggleClicked={this.showSubmenuToggleHandler}>
-          <Submenu show={this.state.showSubmenu} />
+          <Submenu isAuth={this.props.isAuthenticated} show={this.state.showSubmenu} />
         </Toolbar>
-        <main>
-          {this.props.children}
-        </main>
+        <section className="section">
+          <div className="container">
+            {this.props.children}
+          </div>
+        </section>
       </Aux>
     )
   }
 }
 
-export default Layout;
+const mapStateToProps = state => {
+  return {
+    isAuthenticated: state.auth.token !== null
+  }
+}
+
+export default connect(mapStateToProps)(Layout)
