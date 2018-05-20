@@ -82,9 +82,14 @@ export const publish = (data) => {
   }
 }
 
-export const fetchPublications = () => async dispatch => {
+export const fetchPublications = filter => async dispatch => {
   dispatch(fetchStart())
-  database.ref('feed').once('value', 
+  const feedRef = database.ref('feed')
+
+  feedRef
+    .orderByChild('estado')
+    .equalTo(filter)
+    .once('value', 
     snapshot => {
       let fetchedPubs = []
       snapshot.forEach(pub => {

@@ -7,7 +7,7 @@ const feedItem = props => (
   <div className="box">
     <article className="media">
       <FeedImage imageUrl={props.image} />
-      <FeedContent username={props.displayName} since={props.created} content={props.content}>
+      <FeedContent username={props.displayName} since={props.since} content={props.content}>
         <nav className="level is-mobile">
           <div className="level-left">
             <a className="level-item" aria-label="edit">
