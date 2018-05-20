@@ -36,22 +36,21 @@ export const onLogout = () => {
       .catch(error => {
         // An error happened.
       })
-  }
-  
+  } 
 }
 
 export const signup = (email, password) => {
-  return dispatch => {
+  return async dispatch => {
     dispatch(authStart())
     auth.createUserWithEmailAndPassword(email, password)
-      .then(user => {
-        if (user) {
-          const displayName = email.split('@')
-          user.updateProfile({
+      .then(snapshot => {
+        if (snapshot) {
+          const [displayName] = email.split('@')
+          snapshot.user.updateProfile({
             displayName: displayName
           })
             .then(() => {
-              dispatch(authSuccess(user.uid))
+              dispatch(authSuccess(snapshot.user.uid))
             })
             .catch(error => {
               dispatch(authFail(error))
@@ -88,10 +87,7 @@ export const authCheckState = () => {
   return dispatch => {
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        // User is signed in.
         dispatch(authSuccess(user.uid))
-      } else {
-        // No user is signed in.
       }
     });
   }

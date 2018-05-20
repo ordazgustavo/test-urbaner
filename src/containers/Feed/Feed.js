@@ -7,6 +7,10 @@ import FeedItem from '../../components/FeedItem/FeedItem'
 import * as actions from '../../store/actions'
 
 class Feed extends Component {
+  componentDidMount () {
+    this.props.onLoadFeed()
+  }
+
   submit = values => {
     console.log(values);
     this.props.onPublish(values, this.props.userId)
@@ -18,9 +22,14 @@ class Feed extends Component {
         <div className="box">
           <FeedForm onSubmit={this.submit} loading={this.props.loading} btnText="Publicar" />
         </div>
-        <FeedItem />
-        <FeedItem />
-        <FeedItem />
+        {this.props.feed.map(pub => (
+          <FeedItem 
+            key={pub.id} 
+            content={pub.descripcion} 
+            displayName={pub.user.displayName} 
+            since={pub.created}
+            image={pub.imageUrl} />
+        ))}
       </div>
     )
   }
@@ -29,13 +38,15 @@ class Feed extends Component {
 const mapStateToProps = state => {
   return {
     userId: state.auth.userId,
-    loading: state.publish.loading
+    loading: state.feed.loading,
+    feed: state.feed.feed
   }
 }
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPublish: (data, userId) => dispatch(actions.publish(data, userId))
+    onPublish: (data, userId) => dispatch(actions.publish(data, userId)),
+    onLoadFeed: () => dispatch(actions.fetchPublications())
   }
 }
 

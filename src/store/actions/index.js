@@ -1,4 +1,7 @@
-export { publish } from './publish'
+export { 
+  publish,
+  fetchPublications
+} from './feed'
 
 export {
   signup,

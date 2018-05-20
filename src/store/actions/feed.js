@@ -1,4 +1,5 @@
 import * as actionTypes from './actionTypes'
+import { reset } from 'redux-form'
 
 import { auth, database, storage } from '../../shared/firebase'
 
@@ -23,6 +24,20 @@ export const publishFail = error => {
   }
 }
 
+export const fetchStart = () => ({
+  type: actionTypes.FETCH_FEED_START
+})
+
+export const fetchSuccess = publications => ({
+  type: actionTypes.FETCH_FEED_SUCCESS,
+  feed: publications
+})
+
+export const fetchFail = error => ({
+  type: actionTypes.FETCH_FEED_FAIL,
+  error: error
+})
+
 export const publish = (data) => {
   return async dispatch => {
     dispatch(publishStart())
@@ -39,7 +54,6 @@ export const publish = (data) => {
         console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
       },
       error => {
-        console.log(error);
         dispatch(publishFail(error))
       },
       () => {
@@ -54,10 +68,10 @@ export const publish = (data) => {
               displayName: user.displayName 
             }
           }
-          console.log(newData);
           database.ref('feed').child(newPostId).set(newData)
             .then(() => {
-              dispatch(publishSuccess(newPostId, data))
+              dispatch(reset('feedForm'))
+              dispatch(fetchPublications())
             })
             .catch(error => {
               dispatch(publishFail(error))
@@ -66,4 +80,25 @@ export const publish = (data) => {
         
       })
   }
+}
+
+export const fetchPublications = () => async dispatch => {
+  dispatch(fetchStart())
+  database.ref('feed').once('value', 
+    snapshot => {
+      let fetchedPubs = []
+      snapshot.forEach(pub => {
+        fetchedPubs = [
+          {
+            id: pub.key,
+            ...pub.val()
+          },
+          ...fetchedPubs
+        ]
+      })
+      dispatch(fetchSuccess(fetchedPubs))
+    },
+    error => {
+      dispatch(fetchFail(error))
+    })
 }

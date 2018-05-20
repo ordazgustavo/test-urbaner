@@ -11,14 +11,14 @@ import registerServiceWorker from './registerServiceWorker';
 
 import { reducer as formReducer } from 'redux-form'
 import authReducer from './store/reducers/auth'
-import publishReducer from './store/reducers/publish'
+import feedReducer from './store/reducers/feed'
 
 const composeEnhancers = process.env.NODE_ENV === 'development' ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : null || compose
 
 const rootReducer = combineReducers({
   form: formReducer,
   auth: authReducer,
-  publish: publishReducer
+  feed: feedReducer
 })
 
 const store = createStore(rootReducer, composeEnhancers(
