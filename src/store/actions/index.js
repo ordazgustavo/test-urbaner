@@ -1,7 +1,9 @@
+export { publish } from './publish'
+
 export {
   signup,
   login,
-  logout,
+  onLogout,
   setAuthRedirectPath,
   authCheckState
 } from './auth'

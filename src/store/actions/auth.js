@@ -1,5 +1,5 @@
 import * as actionTypes from './actionTypes'
-import axios from 'axios'
+import { auth } from '../../shared/firebase'
 
 export const authStart = () => {
   return {
@@ -7,15 +7,14 @@ export const authStart = () => {
   }
 }
 
-export const authSuccess = (token, userId) => {
+export const authSuccess = userId => {
   return {
     type: actionTypes.AUTH_SUCCESS,
-    idToken: token,
     userId: userId
   }
 }
 
-export const authFail = (error) => {
+export const authFail = error => {
   return {
     type: actionTypes.AUTH_FAIL,
     error: error
@@ -23,70 +22,58 @@ export const authFail = (error) => {
 }
 
 export const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('expirationDate')
-  localStorage.removeItem('userId')
   return {
     type: actionTypes.AUTH_LOGOUT
   }
 }
 
-export const checkAuthTimeout = (expirationTime) => {
+export const onLogout = () => {
   return dispatch => {
-    setTimeout(() => {
-      dispatch(logout())
-    }, expirationTime * 1000);
+    auth.signOut()
+      .then(() => {
+        dispatch(logout())
+      })
+      .catch(error => {
+        // An error happened.
+      })
   }
+  
 }
 
 export const signup = (email, password) => {
   return dispatch => {
-    const url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyAymCZvnS4XvgIOG9AbszjI9obUepzTrxY'
-
-    dispatch(auth(url, email, password))
+    dispatch(authStart())
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(user => {
+        if (user) {
+          const displayName = email.split('@')
+          user.updateProfile({
+            displayName: displayName
+          })
+            .then(() => {
+              dispatch(authSuccess(user.uid))
+            })
+            .catch(error => {
+              dispatch(authFail(error))
+            })
+        }
+      })
+      .catch(error => {
+        dispatch(authFail(error))
+      })
   }
 }
 
 export const login = (email, password) => {
   return dispatch => {
-    const url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyAymCZvnS4XvgIOG9AbszjI9obUepzTrxY'
-
-    dispatch(auth(url, email, password))
-  }
-}
-
-export const auth = (url, email, password) => {
-  return dispatch => {
     dispatch(authStart())
-    const authData = {
-      email: email,
-      password: password,
-      returnSecureToken: true
-    }
-
-    axios.post(url, authData)
-      .then(res => {
-        const expirationDate = new Date(new Date().getTime() + res.data.expiresIn * 1000)
-        localStorage.setItem('token', res.data.idToken)
-        localStorage.setItem('expirationDate', expirationDate)
-        localStorage.setItem('userId', res.data.localId)
-        const user = {
-          [res.data.localId]: {
-            email: email
-          }
-        }
-        axios.put(`https://test-urbaner.firebaseio.com/users.json?auth=${res.data.idToken}`, user)
-          .then(() => {
-            dispatch(authSuccess(res.data.idToken, res.data.localId, email))
-            dispatch(checkAuthTimeout(res.data.expiresIn))
-          })
-          .catch(error => {
-            console.log(error);
-          })
-      })
-      .catch(error => {
-        dispatch(authFail(error))
-      })
+    auth.signInWithEmailAndPassword(email, password)
+    .then(user => {
+      dispatch(authSuccess(user.uid))
+    })
+    .catch(error => {
+      dispatch(authFail(error))
+    })
   }
 }
 
@@ -99,18 +86,13 @@ export const setAuthRedirectPath = (path) => {
 
 export const authCheckState = () => {
   return dispatch => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      dispatch(logout())
-    } else {
-      const expirationDate = new Date(localStorage.getItem('expirationDate'))
-      if (expirationDate <= new Date()) {
-        dispatch(logout())
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        // User is signed in.
+        dispatch(authSuccess(user.uid))
       } else {
-        const userId = localStorage.getItem('userId')
-        dispatch(authSuccess(token, userId))
-        dispatch(checkAuthTimeout((expirationDate.getTime() - new Date().getTime()) / 1000))
+        // No user is signed in.
       }
-    }
+    });
   }
 }

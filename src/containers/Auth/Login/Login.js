@@ -20,7 +20,8 @@ class Login extends Component {
   render () {
     let errorMessage = null
     if (this.props.error) {
-      errorMessage = this.props.error
+      console.log(this.props.error);
+      errorMessage = <p className="is-danger">Credenciales inválidas</p>
     }
     let authRedirect = null
     if (this.props.isAuthenticated) {
@@ -39,7 +40,7 @@ class Login extends Component {
 const mapStateToProps = state => {
   return {
     error: state.auth.error,
-    isAuthenticated: state.auth.token !== null,
+    isAuthenticated: state.auth.userId !== null,
     authRedirectPath: state.auth.authRedirectPath
   }
 }

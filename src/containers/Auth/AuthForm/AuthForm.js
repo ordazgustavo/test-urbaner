@@ -17,10 +17,8 @@ const authForm = ({ handleSubmit, submitting, ...rest }) => (
   </form>
 )
 
-
 const reduxFormConfig = {
   form: 'authForm',
-  destroyOnUnmount: false,
   validate
 }
 

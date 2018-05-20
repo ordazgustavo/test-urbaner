@@ -1,3 +1,7 @@
+export const PUBLISH_START = 'PUBLISH_START'
+export const PUBLISH_SUCCESS = 'PUBLISH_SUCCESS'
+export const PUBLISH_FAIL = 'PUBLISH_FAIL'
+
 export const AUTH_START = 'AUTH_START'
 export const AUTH_SUCCESS = 'AUTH_SUCCESS'
 export const AUTH_FAIL = 'AUTH_FAIL'

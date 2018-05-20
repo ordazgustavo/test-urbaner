@@ -1,7 +1,7 @@
 import React from 'react';
 
 const inputRenderer = render => ({ input, meta, label, ...rest }) => {
-  const inputClasses = ['input']
+  const inputClasses = []
   if (meta.error && meta.touched) {
     inputClasses.push('is-danger')
   }
