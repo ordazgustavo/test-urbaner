@@ -1,6 +1,7 @@
 export { 
   publish,
-  fetchPublications
+  fetchPublications,
+  removePublication
 } from './feed'
 
 export {

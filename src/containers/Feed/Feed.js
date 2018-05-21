@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 
+import Aux from '../../hoc/Aux/Aux'
 import FeedForm from './FeedForm/FeedForm'
 import FeedItem from '../../components/FeedItem/FeedItem'
 
@@ -17,12 +18,21 @@ class Feed extends Component {
 
   submit = values => {
     console.log(values);
-    this.props.onPublish(values, this.props.userId)
+    this.props.onPublish(values)
   }
 
-  handleChange = (event) => {
+  handleChange = event => {
     this.props.onLoadFeed(event.target.value)
     this.setState({filter: event.target.value})
+  }
+
+  handleEdit = id => {
+    console.log('edit', id)
+  }
+
+  handleRemove = id => {
+    console.log('delete', id)
+    this.props.onRemovePublication(id, this.state.filter)
   }
 
   renderFeed = () => {
@@ -34,14 +44,36 @@ class Feed extends Component {
       if (this.props.feed.length) {
         // Si el array.length NO esta vacio
 
-        feed = this.props.feed.map(pub => (
-          <FeedItem 
-            key={pub.id} 
-            content={pub.descripcion} 
-            displayName={pub.user.displayName} 
-            since={pub.created}
-            image={pub.imageUrl} />
-        ))
+        feed = this.props.feed.map(pub => {
+          let controls = null
+          if (pub.user.userId === this.props.userId) {
+            // Mostrar controles solo al usuario que creo la publicacion
+            controls = (
+              <Aux>
+                <a className="level-item" onClick={() => this.handleEdit(pub.id)} aria-label="edit">
+                  <span className="icon is-small">
+                    <i className="fas fa-edit" aria-hidden="true"></i>
+                  </span>
+                </a>
+                <a className="level-item" onClick={() => this.handleRemove(pub.id)} aria-label="delete">
+                  <span className="icon is-small">
+                    <i className="fas fa-trash" aria-hidden="true"></i>
+                  </span>
+                </a>
+              </Aux>
+            )
+          }
+          return (
+            <FeedItem
+              key={pub.id}
+              content={pub.descripcion}
+              displayName={pub.user.displayName}
+              since={pub.created}
+              image={pub.imageUrl}>
+              {controls}
+            </FeedItem>
+          )
+        })
       } else {
         // Si el array esta vacio
 
@@ -74,6 +106,7 @@ class Feed extends Component {
         </div>
       )
     }
+
     const feed = this.renderFeed()
 
     return (
@@ -105,8 +138,9 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPublish: (data, userId) => dispatch(actions.publish(data, userId)),
-    onLoadFeed: (filter) => dispatch(actions.fetchPublications(filter))
+    onPublish: (data) => dispatch(actions.publish(data)),
+    onLoadFeed: (filter) => dispatch(actions.fetchPublications(filter)),
+    onRemovePublication: (id, filter) => dispatch(actions.removePublication(id, filter))
   }
 }
 

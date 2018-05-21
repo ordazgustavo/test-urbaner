@@ -3,26 +3,14 @@ import { reset } from 'redux-form'
 
 import { auth, database, storage } from '../../shared/firebase'
 
-export const publishStart = () => {
-  return {
-    type: actionTypes.PUBLISH_START
-  }
-}
+export const publishStart = () => ({
+  type: actionTypes.PUBLISH_START
+})
 
-export const publishSuccess = (id, data) => {
-  return {
-    type: actionTypes.PUBLISH_SUCCESS,
-    publicationId: id,
-    publicationData: data
-  }
-}
-
-export const publishFail = error => {
-  return {
-    type: actionTypes.PUBLISH_FAIL,
-    error: error
-  }
-}
+export const publishFail = error => ({
+  type: actionTypes.PUBLISH_FAIL,
+  error: error
+})
 
 export const fetchStart = () => ({
   type: actionTypes.FETCH_FEED_START
@@ -38,26 +26,35 @@ export const fetchFail = error => ({
   error: error
 })
 
-export const publish = (data) => {
-  return async dispatch => {
-    dispatch(publishStart())
-    const newPostId = database.ref('feed').push().key
+export const removePublicationStart = () => ({
+  type: actionTypes.REMOVE_PUBLICATION_START 
+})
 
-    const file = data.imagen[0]
-    console.log(file);
-    const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
+export const removePublicationFail = error => ({
+  type: actionTypes.REMOVE_PUBLICATION_FAIL,
+  error: error
+})
 
-    const task = storageRef.put(file)
+export const publish = data => async dispatch => {
+  dispatch(publishStart())
+  const newPostId = database.ref('feed').push().key
 
-    task.on('state_changed', 
-      snapshot => {
-        console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-      },
-      error => {
-        dispatch(publishFail(error))
-      },
-      () => {
-        task.snapshot.ref.getDownloadURL().then(url => {
+  const file = data.imagen[0]
+  console.log(file);
+  const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
+
+  const task = storageRef.put(file)
+
+  task.on('state_changed', 
+    snapshot => {
+      console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+    },
+    error => {
+      dispatch(publishFail(error))
+    },
+    () => {
+      task.snapshot.ref.getDownloadURL()
+        .then(url => {
           const user = auth.currentUser
           const newData = {
             ...data,
@@ -68,18 +65,18 @@ export const publish = (data) => {
               displayName: user.displayName 
             }
           }
-          database.ref('feed').child(newPostId).set(newData)
+          database.ref('feed')
+            .child(newPostId)
+            .set(newData)
             .then(() => {
               dispatch(reset('feedForm'))
-              dispatch(fetchPublications())
+              dispatch(fetchPublications(data.estado))
             })
             .catch(error => {
               dispatch(publishFail(error))
             })
         })
-        
-      })
-  }
+    })
 }
 
 export const fetchPublications = filter => async dispatch => {
@@ -105,5 +102,16 @@ export const fetchPublications = filter => async dispatch => {
     },
     error => {
       dispatch(fetchFail(error))
+    })
+}
+
+export const removePublication = (id, filter) => async dispatch => {
+  dispatch(removePublicationStart())
+  database.ref('feed').child(id)
+    .remove(() => {
+      dispatch(fetchPublications(filter))
+    })
+    .catch(error => {
+      dispatch(removePublicationFail(error))
     })
 }
