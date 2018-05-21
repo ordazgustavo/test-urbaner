@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { submit } from 'redux-form'
 
 import Aux from '../../hoc/Aux/Aux'
 import FeedForm from './FeedForm/FeedForm'
@@ -27,12 +28,15 @@ class Feed extends Component {
   }
 
   handleEdit = id => {
-    console.log('edit', id)
+    this.props.onEditPublication(id)
   }
 
   handleRemove = id => {
-    console.log('delete', id)
     this.props.onRemovePublication(id, this.state.filter)
+  }
+
+  handleSave = (id) => {
+    this.props.onSubmitEditForm()
   }
 
   renderFeed = () => {
@@ -43,18 +47,30 @@ class Feed extends Component {
 
       if (this.props.feed.length) {
         // Si el array.length NO esta vacio
-
+        
         feed = this.props.feed.map(pub => {
+          const editingPublication = this.props.editing === pub.id
+          //    ^^ Si esta publicacion esta siendo editada
+          
           let controls = null
           if (pub.user.userId === this.props.userId) {
             // Mostrar controles solo al usuario que creo la publicacion
             controls = (
               <Aux>
-                <a className="level-item" onClick={() => this.handleEdit(pub.id)} aria-label="edit">
-                  <span className="icon is-small">
-                    <i className="fas fa-edit" aria-hidden="true"></i>
-                  </span>
-                </a>
+                {editingPublication 
+                  ? <a className="level-item" onClick={() => this.handleSave(pub.id)} aria-label="save">
+                      <span className="icon is-small">
+                        <i className="fas fa-save" aria-hidden="true"></i>
+                      </span>
+                    </a>
+
+                  : <a className="level-item" onClick={() => this.handleEdit(pub.id)} aria-label="edit">
+                      <span className="icon is-small">
+                        <i className="fas fa-edit" aria-hidden="true"></i>
+                      </span>
+                    </a>
+                }
+                
                 <a className="level-item" onClick={() => this.handleRemove(pub.id)} aria-label="delete">
                   <span className="icon is-small">
                     <i className="fas fa-trash" aria-hidden="true"></i>
@@ -63,12 +79,16 @@ class Feed extends Component {
               </Aux>
             )
           }
+
           return (
             <FeedItem
               key={pub.id}
+              id={pub.id}
               content={pub.descripcion}
               displayName={pub.user.displayName}
               since={pub.created}
+              edited={pub.edited}
+              editing={editingPublication}
               image={pub.imageUrl}>
               {controls}
             </FeedItem>
@@ -132,7 +152,8 @@ const mapStateToProps = state => {
     isAuthenticated: state.auth.userId !== null,
     userId: state.auth.userId,
     loading: state.feed.loading,
-    feed: state.feed.feed
+    feed: state.feed.feed,
+    editing: state.feed.editing
   }
 }
 
@@ -140,7 +161,9 @@ const mapDispatchToProps = dispatch => {
   return {
     onPublish: (data) => dispatch(actions.publish(data)),
     onLoadFeed: (filter) => dispatch(actions.fetchPublications(filter)),
-    onRemovePublication: (id, filter) => dispatch(actions.removePublication(id, filter))
+    onEditPublication: (id) => dispatch(actions.editPublication(id)),
+    onRemovePublication: (id, filter) => dispatch(actions.removePublication(id, filter)),
+    onSubmitEditForm: () => dispatch(submit('editPublicationForm'))
   }
 }
 

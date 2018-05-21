@@ -26,6 +26,21 @@ export const fetchFail = error => ({
   error: error
 })
 
+export const editPublicationStart = id => ({
+  type: actionTypes.EDIT_PUBLICATION,
+  id: id
+})
+
+export const savePublicationStart = data => ({
+  type: actionTypes.SAVE_PUBLICATION_START,
+  data: data
+})
+
+export const savePublicationFail = error => ({
+  type: actionTypes.SAVE_PUBLICATION_FAIL,
+  error: error
+})
+
 export const removePublicationStart = () => ({
   type: actionTypes.REMOVE_PUBLICATION_START 
 })
@@ -103,6 +118,26 @@ export const fetchPublications = filter => async dispatch => {
     error => {
       dispatch(fetchFail(error))
     })
+}
+
+export const savePublication = data => async dispatch => {
+  dispatch(savePublicationStart())
+  
+  let updates = {}
+  updates['descripcion'] = data.descripcion
+  updates['edited'] = true
+
+  database.ref('feed').child(data.id).update(updates)
+    .then(() => {
+      dispatch(fetchPublications('Publico'))
+    })
+    .catch(error => {
+      dispatch(savePublicationFail(error))
+    })
+}
+
+export const editPublication = publicationId => async dispatch => {
+  dispatch(editPublicationStart(publicationId))
 }
 
 export const removePublication = (id, filter) => async dispatch => {

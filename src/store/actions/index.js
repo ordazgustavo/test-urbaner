@@ -1,6 +1,8 @@
 export { 
   publish,
   fetchPublications,
+  savePublication,
+  editPublication,
   removePublication
 } from './feed'
 
