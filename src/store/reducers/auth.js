@@ -8,33 +8,33 @@ const initState = {
   authRedirectPath: '/'
 }
 
-const authStart = (state, action) => {
-  return updateObject(state, {error: null, loading: true})
-}
+const authStart = (state, action) => updateObject(state, {
+    error: null, loading: true
+  }
+)
 
-const authSuccess = (state, action) => {
-  return updateObject(state, {
+const authSuccess = (state, action) => updateObject(state, {
     userId: action.userId,
     error: null, 
-    loading: false})  
-}
+    loading: false
+  }
+)  
 
-const authFail = (state, action) => {
-  return updateObject(state, {
+const authFail = (state, action) => updateObject(state, {
     error: action.error,
     loading: false
-  })
-}
+  }
+)
 
-const authLogout = (state, action) => {
-  return updateObject(state, {
+const authLogout = (state, action) => updateObject(state, {
     userId: null
-  })
-}
+  }
+)
 
-const setAuthRedirectPath = (state, action) => {
-  return updateObject(state, {authRedirectPath: action.path})
-}
+const setAuthRedirectPath = (state, action) => updateObject(state, {
+    authRedirectPath: action.path
+  }
+)
 
 const reducer = (state = initState, action) => {
   switch (action.type) {

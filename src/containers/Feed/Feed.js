@@ -1,25 +1,30 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { submit } from 'redux-form'
+import { Link } from 'react-router-dom'
 
 import Aux from '../../hoc/Aux/Aux'
 import FeedForm from './FeedForm/FeedForm'
 import FeedItem from '../../components/FeedItem/FeedItem'
+import Modal from '../../components/UI/Modal/Modal'
 
 import * as actions from '../../store/actions'
+import Spinner from '../../components/UI/Spinner/Spinner';
+import IconButton from '../../components/UI/Button/IconButton/IconButton';
 
 class Feed extends Component {
   state = {
-    filter: 'Publico'
+    filter: 'Publico',
+    showModal: false,
+    removeId: null
   }
 
   componentDidMount () {
     this.props.onLoadFeed(this.state.filter)
   }
 
-  submit = values => {
-    console.log(values);
-    this.props.onPublish(values)
+  submit = async values => {
+    await this.props.onPublish(values)
   }
 
   handleChange = event => {
@@ -35,8 +40,26 @@ class Feed extends Component {
     this.props.onRemovePublication(id, this.state.filter)
   }
 
-  handleSave = (id) => {
+  handleSave = id => {
     this.props.onSubmitEditForm()
+  }
+
+  showModalHandler = id => {
+    this.setState(prevState => {
+      return {
+        removeId: id,
+        showModal: !prevState.showModal
+      }
+    })
+  }
+
+  hideModalHandler = () => {
+    this.setState({showModal: false})
+  }
+
+  removeButtonHandler = () => {
+    this.handleRemove(this.state.removeId)
+    this.hideModalHandler()
   }
 
   renderFeed = () => {
@@ -51,31 +74,17 @@ class Feed extends Component {
         feed = this.props.feed.map(pub => {
           const editingPublication = this.props.editing === pub.id
           //    ^^ Si esta publicacion esta siendo editada
-          
+
           let controls = null
           if (pub.user.userId === this.props.userId) {
             // Mostrar controles solo al usuario que creo la publicacion
             controls = (
               <Aux>
                 {editingPublication 
-                  ? <a className="level-item" onClick={() => this.handleSave(pub.id)} aria-label="save">
-                      <span className="icon is-small">
-                        <i className="fas fa-save" aria-hidden="true"></i>
-                      </span>
-                    </a>
-
-                  : <a className="level-item" onClick={() => this.handleEdit(pub.id)} aria-label="edit">
-                      <span className="icon is-small">
-                        <i className="fas fa-edit" aria-hidden="true"></i>
-                      </span>
-                    </a>
+                  ? <IconButton icon="fas fa-save" clicked={() => this.handleSave(pub.id)} />
+                  : <IconButton icon="fas fa-edit" clicked={() => this.handleEdit(pub.id)} />
                 }
-                
-                <a className="level-item" onClick={() => this.handleRemove(pub.id)} aria-label="delete">
-                  <span className="icon is-small">
-                    <i className="fas fa-trash" aria-hidden="true"></i>
-                  </span>
-                </a>
+                <IconButton icon="fas fa-trash" clicked={() => this.showModalHandler(pub.id)} />
               </Aux>
             )
           }
@@ -83,19 +92,21 @@ class Feed extends Component {
           return (
             <FeedItem
               key={pub.id}
-              id={pub.id}
-              content={pub.descripcion}
+              values={{id: pub.id, descripcion: pub.descripcion, estado: pub.estado}}
               displayName={pub.user.displayName}
               since={pub.created}
               edited={pub.edited}
               editing={editingPublication}
               image={pub.imageUrl}>
+
               {controls}
+
             </FeedItem>
           )
         })
-      } else {
+      } else if (!this.props.feed.length && !this.props.fetching) {
         // Si el array esta vacio
+        // y terminó la solicitud
 
         feed = (
           <div className="box">
@@ -109,7 +120,7 @@ class Feed extends Component {
 
       feed = (
         <div className="box">
-          Debes estar autenticado
+          Debes estar autenticado <Link to="/login">Ingresar</Link>
         </div>
       )
     }
@@ -119,39 +130,84 @@ class Feed extends Component {
 
   render () {
     let form = null
+    let modalContent = null
+
     if (this.props.isAuthenticated) {
       form = (
         <div className="box">
-          <FeedForm onSubmit={this.submit} loading={this.props.loading} btnText="Publicar" />
+          <FeedForm onSubmit={this.submit} btnText="Publicar" />
+        </div>
+      )
+
+      if (this.state.showModal && this.state.removeId) {
+        modalContent = (
+          <div className="box">
+            <p>
+              ¿Seguro que quieres eliminar esta publicación?
+            </p>
+            <div className="field is-grouped">
+              <p className="control">
+                <a 
+                  onClick={this.hideModalHandler} 
+                  className="button">
+                  Cancelar
+                </a>
+              </p>
+              <p className="control">
+                <a 
+                  onClick={this.removeButtonHandler} 
+                  className="button is-danger">
+                  Eliminar
+                </a>
+              </p>
+            </div>
+          </div>
+        )
+      }
+    }
+
+    const feed = this.renderFeed()
+    const fetching = this.props.fetching ? <Spinner /> : null
+
+    let content = <Spinner />
+
+    if (!this.props.loading) {
+      content = (
+        <div className="container">
+          {form}
+          <div className="select">
+            <select value={this.state.filter} onChange={this.handleChange}>
+              <option value="Publico">Público</option>
+              <option value="Privado">Privado</option>
+            </select>
+          </div>
+          <hr/>
+          <div className="container">
+            {fetching}
+            {feed}
+          </div>
         </div>
       )
     }
 
-    const feed = this.renderFeed()
-
     return (
-      <div className="container">
-        {form}
-        <div className="select">
-          <select value={this.state.filter} onChange={this.handleChange}>
-            <option value="Publico">Público</option>
-            <option value="Privado">Privado</option>
-          </select>
-        </div>
-        <hr/>
-        <div className="container">
-          {feed}
-        </div>
-      </div>
+      <Aux>
+        <Modal show={this.state.showModal} hide={this.hideModalHandler}>
+          {modalContent}
+        </Modal>
+        {content}
+      </Aux>
     )
   }
 }
 
 const mapStateToProps = state => {
   return {
+    loading: state.auth.loading,
+    fetching: state.feed.fetching,
     isAuthenticated: state.auth.userId !== null,
     userId: state.auth.userId,
-    loading: state.feed.loading,
+    publishing: state.feed.publishing,
     feed: state.feed.feed,
     editing: state.feed.editing
   }
@@ -159,7 +215,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onPublish: (data) => dispatch(actions.publish(data)),
+    onPublish: async (data) => await dispatch(actions.publish(data)),
     onLoadFeed: (filter) => dispatch(actions.fetchPublications(filter)),
     onEditPublication: (id) => dispatch(actions.editPublication(id)),
     onRemovePublication: (id, filter) => dispatch(actions.removePublication(id, filter)),

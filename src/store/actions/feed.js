@@ -7,6 +7,10 @@ export const publishStart = () => ({
   type: actionTypes.PUBLISH_START
 })
 
+export const publishSuccess = () => ({
+  type: actionTypes.PUBLISH_SUCCESS
+})
+
 export const publishFail = error => ({
   type: actionTypes.PUBLISH_FAIL,
   error: error
@@ -45,54 +49,108 @@ export const removePublicationStart = () => ({
   type: actionTypes.REMOVE_PUBLICATION_START 
 })
 
+export const removePublicationSuccess = () => ({
+  type: actionTypes.REMOVE_PUBLICATION_SUCCESS
+})
+
 export const removePublicationFail = error => ({
   type: actionTypes.REMOVE_PUBLICATION_FAIL,
   error: error
 })
 
-export const publish = data => async dispatch => {
-  dispatch(publishStart())
-  const newPostId = database.ref('feed').push().key
+export const publish = data => dispatch => {
+  return new Promise((resolve, reject) => {
+    dispatch(publishStart())
+    const newPostId = database.ref('feed').push().key
 
-  const file = data.imagen[0]
-  console.log(file);
-  const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
+    const file = data.imagen[0]
+    console.log(file);
+    const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
 
-  const task = storageRef.put(file)
-
-  task.on('state_changed', 
-    snapshot => {
-      console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-    },
-    error => {
-      dispatch(publishFail(error))
-    },
-    () => {
-      task.snapshot.ref.getDownloadURL()
-        .then(url => {
-          const user = auth.currentUser
-          const newData = {
-            ...data,
-            created: Date.now(),
-            imageUrl: url,
-            user: {
-              userId: user.uid,
-              displayName: user.displayName 
+    const task = storageRef.put(file)
+    
+    task.on('state_changed', 
+      snapshot => {
+        console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      },
+      error => {
+        dispatch(publishFail(error))
+      },
+      () => {
+        task.snapshot.ref.getDownloadURL()
+          .then(url => {
+            const user = auth.currentUser
+            const newData = {
+              ...data,
+              created: Date.now(),
+              imageUrl: url,
+              user: {
+                userId: user.uid,
+                displayName: user.displayName 
+              }
             }
-          }
-          database.ref('feed')
-            .child(newPostId)
-            .set(newData)
-            .then(() => {
-              dispatch(reset('feedForm'))
-              dispatch(fetchPublications(data.estado))
-            })
-            .catch(error => {
-              dispatch(publishFail(error))
-            })
-        })
-    })
+            database.ref('feed')
+              .child(newPostId)
+              .set(newData)
+              .then(() => {
+                dispatch(reset('feedForm'))
+                dispatch(publishSuccess())
+                dispatch(fetchPublications(data.estado))
+                resolve('resuelta')
+              })
+              .catch(error => {
+                dispatch(publishFail(error))
+                reject(error)
+              })
+          })
+      })
+  })
 }
+
+// export const publish = data => async dispatch => {
+//   dispatch(publishStart())
+//   const newPostId = database.ref('feed').push().key
+
+//   const file = data.imagen[0]
+//   console.log(file);
+//   const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
+
+//   const task = storageRef.put(file)
+
+//   await task.on('state_changed', 
+//     snapshot => {
+//       console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+//     },
+//     error => {
+//       dispatch(publishFail(error))
+//     },
+//     () => {
+//       task.snapshot.ref.getDownloadURL()
+//         .then(url => {
+//           const user = auth.currentUser
+//           const newData = {
+//             ...data,
+//             created: Date.now(),
+//             imageUrl: url,
+//             user: {
+//               userId: user.uid,
+//               displayName: user.displayName 
+//             }
+//           }
+//           database.ref('feed')
+//             .child(newPostId)
+//             .set(newData)
+//             .then(() => {
+//               dispatch(reset('feedForm'))
+//               dispatch(publishSuccess())
+//               dispatch(fetchPublications(data.estado))
+//             })
+//             .catch(error => {
+//               dispatch(publishFail(error))
+//             })
+//         })
+//     })
+// }
 
 export const fetchPublications = filter => async dispatch => {
   dispatch(fetchStart())
@@ -127,9 +185,9 @@ export const savePublication = data => async dispatch => {
   updates['descripcion'] = data.descripcion
   updates['edited'] = true
 
-  database.ref('feed').child(data.id).update(updates)
+  await database.ref('feed').child(data.id).update(updates)
     .then(() => {
-      dispatch(fetchPublications('Publico'))
+      dispatch(fetchPublications(data.estado))
     })
     .catch(error => {
       dispatch(savePublicationFail(error))
@@ -144,6 +202,7 @@ export const removePublication = (id, filter) => async dispatch => {
   dispatch(removePublicationStart())
   database.ref('feed').child(id)
     .remove(() => {
+      dispatch(removePublicationSuccess())
       dispatch(fetchPublications(filter))
     })
     .catch(error => {

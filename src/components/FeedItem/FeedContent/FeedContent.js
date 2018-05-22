@@ -30,9 +30,14 @@ const feedContent = props => {
     <div className="media-content">
       <div className="content">
         {content}
+        <nav className="level is-mobile">
+          <div className="level-left">
+            {props.children}
+          </div>
+        </nav>
       </div>
-      {props.children}
     </div>
+
   )
 }
 

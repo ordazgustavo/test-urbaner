@@ -1,46 +1,36 @@
 import * as actionTypes from './actionTypes'
 import { auth } from '../../shared/firebase'
 
-export const authStart = () => {
-  return {
-    type: actionTypes.AUTH_START
-  }
-}
+export const authStart = () => ({
+  type: actionTypes.AUTH_START
+})
 
-export const authSuccess = userId => {
-  return {
-    type: actionTypes.AUTH_SUCCESS,
-    userId: userId
-  }
-}
+export const authSuccess = userId => ({
+  type: actionTypes.AUTH_SUCCESS,
+  userId: userId
+})
 
-export const authFail = error => {
-  return {
-    type: actionTypes.AUTH_FAIL,
-    error: error
-  }
-}
+export const authFail = error => ({
+  type: actionTypes.AUTH_FAIL,
+  error: error
+})
 
-export const logout = () => {
-  return {
-    type: actionTypes.AUTH_LOGOUT
-  }
-}
+export const logout = () => ({
+  type: actionTypes.AUTH_LOGOUT
+})
 
-export const onLogout = () => {
-  return dispatch => {
-    auth.signOut()
-      .then(() => {
-        dispatch(logout())
-      })
-      .catch(error => {
-        // An error happened.
-      })
-  } 
-}
+export const onLogout = () => dispatch => {
+  auth.signOut()
+    .then(() => {
+      dispatch(logout())
+    })
+    .catch(error => {
+      dispatch(authFail(error))
+    })
+} 
 
-export const signup = (email, password) => {
-  return async dispatch => {
+export const signup = (email, password) => dispatch => {
+  return new Promise((resolve, reject) => {
     dispatch(authStart())
     auth.createUserWithEmailAndPassword(email, password)
       .then(snapshot => {
@@ -51,29 +41,34 @@ export const signup = (email, password) => {
           })
             .then(() => {
               dispatch(authSuccess(snapshot.user.uid))
+              resolve()
             })
             .catch(error => {
               dispatch(authFail(error))
+              reject()
             })
         }
       })
       .catch(error => {
         dispatch(authFail(error))
+        reject()
       })
-  }
+  })
 }
 
-export const login = (email, password) => {
-  return dispatch => {
+export const login = (email, password) => dispatch => {
+  return new Promise((resolve, reject) => {
     dispatch(authStart())
     auth.signInWithEmailAndPassword(email, password)
-    .then(user => {
-      dispatch(authSuccess(user.uid))
-    })
-    .catch(error => {
-      dispatch(authFail(error))
-    })
-  }
+      .then(user => {
+        dispatch(authSuccess(user.uid))
+        resolve()
+      })
+      .catch(error => {
+        dispatch(authFail(error))
+        reject()
+      })
+  })
 }
 
 export const setAuthRedirectPath = (path) => {
@@ -83,12 +78,17 @@ export const setAuthRedirectPath = (path) => {
   }
 }
 
-export const authCheckState = () => {
-  return dispatch => {
-    auth.onAuthStateChanged(function(user) {
+export const authCheckState = () => dispatch => {
+  dispatch(authStart())
+  auth.onAuthStateChanged(
+    user => {
       if (user) {
         dispatch(authSuccess(user.uid))
+      } else {
+        dispatch(authSuccess(null))
       }
-    });
-  }
+    },
+    error => {
+      dispatch(authFail(error))
+    })
 }

@@ -13,8 +13,8 @@ class Login extends Component {
     }
   }
 
-  submit = values => {
-    this.props.onLogin(values)
+  submit = async values => {
+    await this.props.onLogin(values)
   }
 
   render () {
@@ -39,6 +39,7 @@ class Login extends Component {
 
 const mapStateToProps = state => {
   return {
+    loading: state.auth.loading,
     error: state.auth.error,
     isAuthenticated: state.auth.userId !== null,
     authRedirectPath: state.auth.authRedirectPath
@@ -47,7 +48,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onLogin: ({username, password}) => dispatch(actions.login(username, password)),
+    onLogin: async ({username, password}) => await dispatch(actions.login(username, password)),
     onSetAuthRedirectPath: () => dispatch(actions.setAuthRedirectPath('/'))
   }
 }

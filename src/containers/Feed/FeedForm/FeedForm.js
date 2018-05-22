@@ -3,6 +3,7 @@ import { reduxForm, Field } from 'redux-form'
 
 import validate from '../../../shared/feedValidation'
 import * as inputType from '../../../components/UI/Input/InputType/InputType'
+import SubmitButton from '../../../components/UI/Button/SubmitButton/SubmitButton';
 
 const authForm = ({ handleSubmit, submitting, ...props }) => (
   <form onSubmit={handleSubmit}>
@@ -14,11 +15,7 @@ const authForm = ({ handleSubmit, submitting, ...props }) => (
     </Field>
     <Field name="imagen" label="Imagen" accept="image/*" component={inputType.file} />
 
-    <div className="field">
-      <div className="control">
-        <button type="submit" className={`button is-link ${props.loading ? 'is-loading': ''}`} disabled={submitting}>{props.btnText}</button>
-      </div>
-    </div>
+    <SubmitButton loading={submitting}>{props.btnText}</SubmitButton>
   </form>
 )
 
