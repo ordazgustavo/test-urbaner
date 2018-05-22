@@ -3,8 +3,6 @@ import 'firebase/database'
 import 'firebase/auth'
 import 'firebase/storage'
 
-import { config } from './firebaseConfig'
-
 const envConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -14,7 +12,7 @@ const envConfig = {
   messagingSenderId: process.env.REACT_APP_MESSEGING_SENDER_ID
 }
 
-firebase.initializeApp(config || envConfig)
+firebase.initializeApp(envConfig)
 
 export const database = firebase.database()
 export const auth = firebase.auth()
