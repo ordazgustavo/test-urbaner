@@ -64,17 +64,17 @@ export const publish = data => dispatch => {
     const newPostId = database.ref('feed').push().key
 
     const file = data.imagen[0]
-    console.log(file);
     const storageRef = storage.ref('feed').child(`${newPostId}/${file.name}`)
 
     const task = storageRef.put(file)
     
     task.on('state_changed', 
       snapshot => {
-        console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        // console.log((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
       },
       error => {
         dispatch(publishFail(error))
+        reject(error)
       },
       () => {
         task.snapshot.ref.getDownloadURL()
@@ -96,7 +96,7 @@ export const publish = data => dispatch => {
                 dispatch(reset('feedForm'))
                 dispatch(publishSuccess())
                 dispatch(fetchPublications(data.estado))
-                resolve('resuelta')
+                resolve(data.estado)
               })
               .catch(error => {
                 dispatch(publishFail(error))

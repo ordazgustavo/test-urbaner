@@ -9,8 +9,7 @@ const authForm = ({ handleSubmit, submitting, ...props }) => (
   <form onSubmit={handleSubmit}>
     <Field name="descripcion" label="Descripción" component={inputType.textarea} />
     <Field name="estado" label="Estado" component={inputType.select}>
-      <option>Seleccionar</option>
-      <option value="Publico">Publico</option>
+      <option value="Publico">Público</option>
       <option value="Privado">Privado</option>
     </Field>
     <Field name="imagen" label="Imagen" accept="image/*" component={inputType.file} />

@@ -24,7 +24,8 @@ class Feed extends Component {
   }
 
   submit = async values => {
-    await this.props.onPublish(values)
+    let data = await this.props.onPublish(values)
+    this.setState({filter: data})
   }
 
   handleChange = event => {
@@ -181,7 +182,8 @@ class Feed extends Component {
               <option value="Privado">Privado</option>
             </select>
           </div>
-          <hr/>
+          <br/>
+          <br/>
           <div className="container">
             {fetching}
             {feed}
