@@ -1,11 +1,17 @@
 import React from 'react';
 
 const submenuToggle = props => (
-  <a role="button" className="navbar-burger" aria-label="menu" aria-expanded="false" onClick={props.clicked}>
-    <span aria-hidden="true"></span>
-    <span aria-hidden="true"></span>
-    <span aria-hidden="true"></span>
-  </a>
-)
+  <button
+    style={{ border: 'none' }}
+    className="button has-background-primary navbar-burger"
+    aria-label="menu"
+    aria-expanded="false"
+    onClick={props.clicked}
+  >
+    <span aria-hidden="true" />
+    <span aria-hidden="true" />
+    <span aria-hidden="true" />
+  </button>
+);
 
 export default submenuToggle;
